@@ -4,7 +4,7 @@
 
 async function testChat() {
     try {
-        const response = await fetch('http://localhost:3000/api/chat', {
+        const response = await fetch('https://jisanbot.vercel.app/api/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -16,6 +16,9 @@ async function testChat() {
             }),
         });
 
+        console.log('Response status:', response.status);
+        console.log('Response headers:', [...response.headers.entries()]);
+
         if (!response.ok) {
             console.error('Error status:', response.status);
             console.error('Error text:', await response.text());
@@ -25,10 +28,16 @@ async function testChat() {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
 
+        console.log('Start reading stream...');
         while (true) {
             const { done, value } = await reader.read();
-            if (done) break;
-            process.stdout.write(decoder.decode(value));
+            if (done) {
+                console.log('Stream done.');
+                break;
+            }
+            const chunk = decoder.decode(value, { stream: true });
+            console.log('Received chunk:', chunk);
+            process.stdout.write(chunk);
         }
         console.log('\nDone.');
     } catch (error) {
