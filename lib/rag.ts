@@ -19,9 +19,10 @@ export async function getContext(query: string): Promise<string> {
 
     // For this prototype, we return the concatenated content of all markdown files.
     // In a real scenario, we would chunk this and search for relevant chunks.
+    console.log(`[RAG] Loaded ${files.length} files from ${dataDir}`);
     return allContent;
   } catch (error) {
     console.error("Error reading knowledge base:", error);
-    return "";
+    return `Error loading knowledge base: ${error}`;
   }
 }

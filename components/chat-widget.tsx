@@ -46,7 +46,10 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
                 }),
             });
 
-            if (!response.ok) throw new Error('Network response was not ok');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.details || errorData.error || 'Network response was not ok');
+            }
 
             const reader = response.body?.getReader();
             const decoder = new TextDecoder();
@@ -75,7 +78,7 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
             setMessages(prev => [...prev, {
                 id: Date.now().toString(),
                 role: 'assistant',
-                content: '죄송합니다. 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+                content: `죄송합니다. 오류가 발생했습니다.\n${error instanceof Error ? error.message : '알 수 없는 오류'}`
             }]);
         } finally {
             setIsLoading(false);

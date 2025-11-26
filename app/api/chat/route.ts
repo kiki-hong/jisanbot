@@ -70,8 +70,14 @@ export async function POST(req: Request) {
         });
 
         return result.toTextStreamResponse();
-    } catch (error) {
+        return result.toTextStreamResponse();
+    } catch (error: any) {
         console.error("Chat API Error:", error);
-        return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
+        // Return detailed error for debugging (remove in production later)
+        return new Response(JSON.stringify({
+            error: "Internal Server Error",
+            details: error.message,
+            stack: error.stack
+        }), { status: 500 });
     }
 }
