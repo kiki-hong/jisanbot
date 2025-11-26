@@ -5,8 +5,14 @@ import { logChat } from '@/lib/db';
 import { appendLogToSheet } from '@/lib/google-sheets';
 import { headers } from 'next/headers';
 
+const apiKey = process.env.GOOGLE_API_KEY;
+
+if (!apiKey) {
+    console.error("GOOGLE_API_KEY is missing!");
+}
+
 const google = createGoogleGenerativeAI({
-    apiKey: process.env.GOOGLE_API_KEY,
+    apiKey: apiKey || "",
 });
 
 // Allow streaming responses up to 30 seconds

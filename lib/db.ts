@@ -22,8 +22,15 @@ export async function logChat(sourceId: string, message: string, response: strin
             logs = JSON.parse(content);
         }
         logs.push(logEntry);
-        fs.writeFileSync(LOG_FILE, JSON.stringify(logs, null, 2));
-        console.log(`[DB] Logged chat from ${sourceId}`);
+
+        // In Vercel (production), the filesystem is read-only.
+        // We only write to file in development mode.
+        if (process.env.NODE_ENV !== 'production') {
+            fs.writeFileSync(LOG_FILE, JSON.stringify(logs, null, 2));
+            console.log(`[DB] Logged chat from ${sourceId}`);
+        } else {
+            console.log(`[DB] Skipped file write in production for ${sourceId}`);
+        }
     } catch (error) {
         console.error("Error logging chat:", error);
     }

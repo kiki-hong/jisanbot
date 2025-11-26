@@ -1,11 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    // @ts-ignore
-    outputFileTracingIncludes: {
-      '/api/chat': ['./data/**/*'],
-    },
+  outputFileTracingIncludes: {
+    '/api/chat': ['./data/**/*'],
+    '/api/**/*': ['./data/**/*'],
   },
 };
 
