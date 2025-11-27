@@ -16,15 +16,13 @@ export async function POST(req: Request) {
     // Support both common env var names: our own and AI SDK default
     const apiKey =
       process.env.GOOGLE_API_KEY ||
-      process.env.GOOGLE_GENERATIVE_AI_API_KEY ; // last-resort fallback if user set public var`n
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     if (!apiKey) {
-      // Collect safe debug info: present env var NAMES (no values) and Vercel env context
-      let presentEnvKeys: string[] = [];
-      try {
-        presentEnvKeys = Object.keys(process.env).filter((k) => k.toUpperCase().includes('GOOGLE'));
-      } catch {}
-
-      return new Response( JSON.stringify({ error: 'Missing API key', details: 'Set GOOGLE_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY in Vercel Project > Settings > Environment Variables. Ensure the correct Environment (Production/Preview) and redeploy.' }),
+      return new Response(
+        JSON.stringify({
+          error: 'Missing API key',
+          details:
+            'Set GOOGLE_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY in Vercel Project > Settings > Environment Variables. Ensure the correct Environment (Production/Preview) and redeploy.'
         }),
         { status: 500 }
       );
