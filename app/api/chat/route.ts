@@ -29,41 +29,37 @@ export async function POST(req: Request) {
     const lastMessage = messages[messages.length - 1];
     const query = lastMessage?.content ?? '';
 
-    // 1) Knowledge base
     const context = await getContext(query);
 
-    // 2) System prompt (Korean)\n    const systemPrompt = `
-지식산업센터 AI 컨설턴트입니다. 아래 지식베이스를 참고하여 사용자의 질문을 정확하고 친절하게 답변하세요.
+    const systemPrompt = [
+      '지식산업센터 AI 컨설턴트입니다. 아래 지식베이스를 참고하여 사용자의 질문을 정확하고 친절하게 답변하세요.',
+      '',
+      '[지식베이스]',
+      context,
+      '',
+      '규칙:',
+      '1) 반드시 지식베이스의 내용에 근거해 설명하세요. 추측은 피하고 사실을 명확히 밝힙니다.',
+      '2) 법률/세무 관련 내용은 "2025년 기준"임을 분명히 표기합니다.',
+      '3) 지식베이스에 없는 내용이면 "죄송합니다. 현재 문서에는 해당 정보가 없습니다."라고 안내합니다.',
+      '4) 말투는 정중하고 간결하게, 필요 시 마지막에 한 문장 요약을 덧붙입니다.',
+      '5) 가능한 경우 마크다운 형식으로 보기 좋게 정리합니다.',
+    ].join('\n');
 
-[지식베이스]
-${context}
-
-규칙:
-1) 반드시 지식베이스의 내용에 근거해 설명하세요. 추측은 피하고 사실을 명확히 밝힙니다.
-2) 법률/세무 관련 내용은 "2025년 기준"임을 분명히 표기합니다.
-3) 지식베이스에 없는 내용이면 "죄송합니다. 현재 문서에는 해당 정보가 없습니다."라고 안내합니다.
-4) 말투는 정중하고 간결하게, 필요 시 마지막에 한 문장 요약을 덧붙입니다.
-5) 가능한 경우 마크다운 형식으로 보기 좋게 정리합니다.
-`;
-
-    // Request metadata (for logging)
     const headersList = await headers();
     const ip = headersList.get('x-forwarded-for') || 'unknown';
     const referer = headersList.get('referer') || 'unknown';
     const userAgent = headersList.get('user-agent') || 'unknown';
 
-    // Default: non-stream for stability. Use ?stream=1 to stream.
     const url = new URL(req.url);
     const stream = url.searchParams.get('stream') === '1';
 
     if (!stream) {
       const { text } = await generateText({
-        model: google('gemini-1.5-flash-latest-latest'),
+        model: google('gemini-1.5-flash-latest'),
         system: systemPrompt,
         messages,
       });
 
-      // Log
       await logChat(sourceId, query, text);
       await appendLogToSheet({
         timestamp: new Date().toISOString(),
@@ -81,7 +77,7 @@ ${context}
     }
 
     const result = await streamText({
-      model: google('gemini-1.5-flash-latest-latest'),
+      model: google('gemini-1.5-flash-latest'),
       system: systemPrompt,
       messages,
       onFinish: async (completion) => {
@@ -111,5 +107,3 @@ ${context}
     );
   }
 }
-
-
