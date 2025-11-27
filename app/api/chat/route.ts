@@ -1,5 +1,6 @@
 ﻿import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { streamText } from 'ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getContext } from '@/lib/rag';
 import { logChat } from '@/lib/db';
 import { appendLogToSheet } from '@/lib/google-sheets';
@@ -34,6 +35,17 @@ export async function POST(req: Request) {
     const { messages, sourceId = 'default' } = await req.json();
     const lastMessage = messages[messages.length - 1];
     const query = lastMessage.content;
+
+    // Optional non-stream fallback for diagnosis: /api/chat?stream=0
+    const url = new URL(req.url);
+    if (url.searchParams.get('stream') === '0') {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const prompt = `${systemPrompt}\n\n[User Question]\n${query}`;
+      const resp = await model.generateContent(prompt);
+      const text = resp.response.text() || '응답이 비어 있습니다.';
+      return new Response(text, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+    }
 
     // 1. Retrieve Context (RAG)
     const context = await getContext(query);
