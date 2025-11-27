@@ -5,19 +5,27 @@ import { logChat } from '@/lib/db';
 import { appendLogToSheet } from '@/lib/google-sheets';
 import { headers } from 'next/headers';
 
-const google = createGoogleGenerativeAI({
-    apiKey: process.env.GOOGLE_API_KEY || "",
-});
+// Ensure we only run in Node.js runtime where env vars are available
+export const runtime = 'nodejs';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
     try {
-        if (!process.env.GOOGLE_API_KEY) {
-            console.error("GOOGLE_API_KEY is missing!");
-            throw new Error("GOOGLE_API_KEY is not set in environment variables");
+        // Support both common env var names: our own and AI SDK default
+        const apiKey = process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+        if (!apiKey) {
+            return new Response(
+                JSON.stringify({
+                    error: 'Missing API key',
+                    details: 'Set GOOGLE_API_KEY (or GOOGLE_GENERATIVE_AI_API_KEY) in Vercel Project > Settings > Environment Variables.',
+                }),
+                { status: 500 }
+            );
         }
+
+        const google = createGoogleGenerativeAI({ apiKey });
         const { messages, sourceId = 'default' } = await req.json();
         const lastMessage = messages[messages.length - 1];
         const query = lastMessage.content;
