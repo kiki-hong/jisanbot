@@ -32,8 +32,7 @@ export async function POST(req: Request) {
     // 1) Knowledge base
     const context = await getContext(query);
 
-    // 2) System prompt (Korean)
-    const systemPrompt = `
+    // 2) System prompt (Korean)\n    const systemPrompt = `
 지식산업센터 AI 컨설턴트입니다. 아래 지식베이스를 참고하여 사용자의 질문을 정확하고 친절하게 답변하세요.
 
 [지식베이스]
@@ -59,7 +58,7 @@ ${context}
 
     if (!stream) {
       const { text } = await generateText({
-        model: google('gemini-1.5-flash'),
+        model: google('gemini-1.5-flash-latest-latest'),
         system: systemPrompt,
         messages,
       });
@@ -82,7 +81,7 @@ ${context}
     }
 
     const result = await streamText({
-      model: google('gemini-1.5-flash'),
+      model: google('gemini-1.5-flash-latest-latest'),
       system: systemPrompt,
       messages,
       onFinish: async (completion) => {
@@ -112,3 +111,4 @@ ${context}
     );
   }
 }
+
