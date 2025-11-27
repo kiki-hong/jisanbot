@@ -1,4 +1,4 @@
-import fs from 'fs';
+﻿import fs from 'fs';
 import path from 'path';
 
 
@@ -26,7 +26,7 @@ export async function getContext(query: string): Promise<string> {
       console.error("[RAG] Data directory not found in:", possiblePaths);
       console.error("[RAG] Current working directory:", process.cwd());
       console.error("[RAG] __dirname:", __dirname);
-      return "지식 베이스를 찾을 수 없습니다. (시스템 점검 중)";
+      return "吏??踰좎씠?ㅻ? 李얠쓣 ???놁뒿?덈떎. (?쒖뒪???먭? 以?";
     }
 
     const files = fs.readdirSync(dataDir).filter(file => file.endsWith('.md'));
@@ -48,3 +48,4 @@ export async function getContext(query: string): Promise<string> {
     return `Error loading knowledge base: ${error}`;
   }
 }
+
