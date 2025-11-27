@@ -7,6 +7,7 @@ import { headers } from 'next/headers';
 
 // Ensure we only run in Node.js runtime where env vars are available
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -82,7 +83,7 @@ ${context}
       },
     });
 
-    return result.toTextStreamResponse();
+    return result.toAIStreamResponse();
   } catch (error: any) {
     console.error('Chat API Error:', error);
     // Return detailed error for debugging (remove in production later)
