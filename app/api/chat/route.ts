@@ -83,7 +83,7 @@ ${context}
       },
     });
 
-    return result.toAIStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error: any) {
     console.error('Chat API Error:', error);
     // Return detailed error for debugging (remove in production later)
