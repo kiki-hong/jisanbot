@@ -1,42 +1,19 @@
-# Implementation Plan - Google Sheets Logging
+# 챗봇 무응답 디버깅
 
-The goal is to log chat interactions (Question, Answer, IP, Referer, Timestamp) to a specific Google Sheet.
+사용자는 `https://jisanbot.vercel.app/`에서 챗봇이 응답하지 않는다고 보고했습니다. 로컬에서는 잘 작동한다고 합니다. 로컬 기능을 확인한 후 배포 환경을 조사해야 합니다.
 
-## User Review Required
-> [!IMPORTANT]
-> **Google Cloud Service Account Required**
-> To write to Google Sheets from the server, we need a **Service Account**.
-> 1. Create a Service Account in Google Cloud Console.
-> 2. Download the JSON key file.
-> 3. **Share the Google Sheet** (`1RwHfngUkij84UCCqyu-5TsxRw-wMXExKQCGCTWoqznw`) with the Service Account's email address (giving it "Editor" permission).
-> 4. Add the JSON key contents to `.env.local` (we will use a simplified approach of putting the specific fields we need: `GOOGLE_SHEETS_CLIENT_EMAIL` and `GOOGLE_SHEETS_PRIVATE_KEY`).
+## 사용자 검토 필요
+- 현재 단계에서는 없음.
 
-## Proposed Changes
+## 제안된 변경 사항
+아직 코드 변경 사항은 없습니다. 이것은 디버깅 작업입니다.
 
-### Dependencies
-- [NEW] Install `googleapis` package.
+## 검증 계획
 
-### Configuration
-- [MODIFY] `.env.local` to include:
-  - `GOOGLE_SHEETS_SPREADSHEET_ID`
-  - `GOOGLE_SHEETS_CLIENT_EMAIL`
-  - `GOOGLE_SHEETS_PRIVATE_KEY`
+### 자동화 테스트
+- `npm run dev`를 실행하고 챗봇 인터페이스를 테스트합니다.
+- 로직을 격리하여 테스트할 수 있다면 `node test-chat.js`를 실행합니다.
 
-### Library
-- [NEW] `lib/google-sheets.ts`
-  - Initialize GoogleAuth.
-  - Function `appendLogToSheet(data: LogData)` to append a row.
-
-### API
-- [MODIFY] `app/api/chat/route.ts`
-  - Extract `x-forwarded-for` (IP) and `referer` headers.
-  - Call `appendLogToSheet` in the `onFinish` callback (in parallel with existing file logging).
-
-## Verification Plan
-### Automated Tests
-- None (requires live Google API interaction).
-
-### Manual Verification
-- Trigger a chat message.
-- Check server logs for success/error message from Google Sheets API.
-- (User Action) Check the actual Google Sheet to see if the row appeared.
+### 수동 검증
+- `.env.local`에 누락된 키가 있는지 확인합니다.
+- 로컬 환경 변수와 Vercel에 있어야 할 환경 변수를 비교합니다.

@@ -49,10 +49,10 @@ export async function POST(req: Request) {
         const referer = headersList.get('referer') || 'unknown';
         const userAgent = headersList.get('user-agent') || 'unknown';
 
-        console.log("[API] Starting streamText with model: gemini-1.5-flash");
+        console.log("[API] Starting streamText with model: gemini-2.0-flash");
 
         const result = await streamText({
-            model: google('gemini-1.5-flash'),
+            model: google('gemini-2.0-flash'),
             system: systemPrompt,
             messages: messages,
             onFinish: async (completion) => {

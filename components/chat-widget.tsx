@@ -16,6 +16,10 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
     const [inputValue, setInputValue] = useState('');
     const [messages, setMessages] = useState<Message[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [width, setWidth] = useState(380);
+    const [height, setHeight] = useState(600);
+    const [resizing, setResizing] = useState<'width' | 'height' | null>(null);
+    const sidebarRef = useRef<HTMLDivElement>(null);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -26,6 +30,38 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!resizing) return;
+
+            if (resizing === 'width') {
+                const newWidth = window.innerWidth - e.clientX - 16;
+                const clampedWidth = Math.max(300, Math.min(newWidth, window.innerWidth - 32, 800));
+                setWidth(clampedWidth);
+            } else if (resizing === 'height') {
+                const newHeight = window.innerHeight - e.clientY - 16;
+                const clampedHeight = Math.max(400, Math.min(newHeight, window.innerHeight - 32));
+                setHeight(clampedHeight);
+            }
+        };
+
+        const handleMouseUp = () => {
+            setResizing(null);
+        };
+
+        if (resizing) {
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+            document.body.style.userSelect = 'none';
+        }
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+            document.body.style.userSelect = '';
+        };
+    }, [resizing]);
 
     const handleSendMessage = async (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -89,11 +125,33 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
         <div className="fixed bottom-4 right-4 z-50 font-sans">
             {/* Chat Window */}
             <div
+                ref={sidebarRef}
+                style={{
+                    width: isOpen ? width : 0,
+                    height: isOpen ? height : 0
+                }}
                 className={twMerge(
-                    "bg-white rounded-2xl shadow-2xl flex flex-col transition-all duration-300 ease-in-out overflow-hidden border border-gray-200",
-                    isOpen ? "w-[380px] h-[600px] opacity-100 translate-y-0" : "w-0 h-0 opacity-0 translate-y-10 pointer-events-none"
+                    "bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200",
+                    isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none",
+                    !resizing && "transition-all duration-300 ease-in-out"
                 )}
             >
+                {/* Width Resize Handle (Left) */}
+                <div
+                    className="absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize hover:bg-blue-400/50 z-50 transition-colors"
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        setResizing('width');
+                    }}
+                />
+                {/* Height Resize Handle (Top) */}
+                <div
+                    className="absolute left-0 top-0 right-0 h-1.5 cursor-ns-resize hover:bg-blue-400/50 z-50 transition-colors"
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        setResizing('height');
+                    }}
+                />
                 {/* Header */}
                 <div className="bg-slate-900 text-white p-4 flex justify-between items-center">
                     <div className="flex items-center gap-2">

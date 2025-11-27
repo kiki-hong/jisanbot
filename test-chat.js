@@ -4,14 +4,14 @@
 
 async function testChat() {
     try {
-        const response = await fetch('https://jisanbot.vercel.app/api/chat', {
+        const response = await fetch('http://localhost:3000/api/chat', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 messages: [
-                    { role: 'user', content: '지식산업센터란 무엇인가요?' }
+                    { role: 'user', content: process.argv[2] || '지식산업센터란 무엇인가요?' }
                 ]
             }),
         });
@@ -45,4 +45,8 @@ async function testChat() {
     }
 }
 
-testChat();
+console.time('Total Duration');
+const start = Date.now();
+testChat().then(() => {
+    console.timeEnd('Total Duration');
+});
