@@ -1,6 +1,6 @@
 ﻿import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { streamText } from 'ai';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { streamText, generateText } from 'ai';
+
 import { getContext } from '@/lib/rag';
 import { logChat } from '@/lib/db';
 import { appendLogToSheet } from '@/lib/google-sheets';
@@ -113,3 +113,4 @@ ${context}
     );
   }
 }
+
