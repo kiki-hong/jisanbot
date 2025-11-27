@@ -16,8 +16,7 @@ export async function POST(req: Request) {
     // Support both common env var names: our own and AI SDK default
     const apiKey =
       process.env.GOOGLE_API_KEY ||
-      process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
-      process.env.NEXT_PUBLIC_GOOGLE_API_KEY; // last-resort fallback if user set public var
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ; // last-resort fallback if user set public var
 
     // Safe debug: log which GOOGLE* env keys exist (not values)
     try {
@@ -119,3 +118,4 @@ export async function POST(req: Request) {
     );
   }
 }
+
