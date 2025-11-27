@@ -6,19 +6,13 @@ import { logChat } from '@/lib/db';
 import { appendLogToSheet } from '@/lib/google-sheets';
 import { headers } from 'next/headers';
 
-// Ensure we only run in Node.js runtime where env vars are available
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-// Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
-    // Support both common env var names: our own and AI SDK default
-    const apiKey =
-      process.env.GOOGLE_API_KEY ||
-      process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    const apiKey = process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
     if (!apiKey) {
       return new Response(
         JSON.stringify({
@@ -34,23 +28,13 @@ export async function POST(req: Request) {
 
     const { messages, sourceId = 'default' } = await req.json();
     const lastMessage = messages[messages.length - 1];
-    const query = lastMessage.content;
+    const query = lastMessage?.content ?? '';
 
-    // Optional non-stream fallback for diagnosis: /api/chat?stream=0
-    const url = new URL(req.url);
-    if (url.searchParams.get('stream') === '0') {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-      const prompt = `${systemPrompt}\n\n[User Question]\n${query}`;
-      const resp = await model.generateContent(prompt);
-      const text = resp.response.text() || '응답이 비어 있습니다.';
-      return new Response(text, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
-    }
-
-    // 1. Retrieve Context (RAG)
+    // 1) Knowledge base
     const context = await getContext(query);
-        // 2. Generate Response with Streaming
-        const systemPrompt = `
+
+    // 2) System prompt (Korean)
+    const systemPrompt = `
 지식산업센터 AI 컨설턴트입니다. 아래 지식베이스를 참고하여 사용자의 질문을 정확하고 친절하게 답변하세요.
 
 [지식베이스]
@@ -63,52 +47,69 @@ ${context}
 4) 말투는 정중하고 간결하게, 필요 시 마지막에 한 문장 요약을 덧붙입니다.
 5) 가능한 경우 마크다운 형식으로 보기 좋게 정리합니다.
 `;
-        // Capture request details for logging
+
+    // Request metadata (for logging)
     const headersList = await headers();
     const ip = headersList.get('x-forwarded-for') || 'unknown';
     const referer = headersList.get('referer') || 'unknown';
     const userAgent = headersList.get('user-agent') || 'unknown';
+
+    // Default: non-stream for stability. Use ?stream=1 to stream.
+    const url = new URL(req.url);
+    const stream = url.searchParams.get('stream') === '1';
+
+    if (!stream) {
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const prompt = `${systemPrompt}\n\n[User Question]\n${query}`;
+      const resp = await model.generateContent(prompt);
+      const text = resp.response.text() || '응답이 비어 있습니다.';
+
+      // Log
+      await logChat(sourceId, query, text);
+      await appendLogToSheet({
+        timestamp: new Date().toISOString(),
+        ip,
+        referer,
+        userAgent,
+        sourceId,
+        question: query,
+        answer: text,
+      });
+
+      return new Response(text, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+    }
 
     console.log('[API] Starting streamText with model: gemini-1.5-flash');
 
     const result = await streamText({
       model: google('gemini-1.5-flash'),
       system: systemPrompt,
-      messages: messages,
+      messages,
       onFinish: async (completion) => {
-        // 3. Log Interaction
-        console.log(`[Log] Source: ${sourceId}, Q: ${query}, A: ${completion.text}`);
-
-        // Log to local file (dev only) and console in prod
-        await logChat(sourceId, query, completion.text);
-
-        // Log to Google Sheets (if configured)
-        await appendLogToSheet({
-          timestamp: new Date().toISOString(),
-          ip,
-          referer,
-          userAgent,
-          sourceId,
-          question: query,
-          answer: completion.text,
-        });
+        try {
+          await logChat(sourceId, query, completion.text);
+          await appendLogToSheet({
+            timestamp: new Date().toISOString(),
+            ip,
+            referer,
+            userAgent,
+            sourceId,
+            question: query,
+            answer: completion.text,
+          });
+        } catch (e) {
+          console.warn('[Log] Skipped logging error:', e);
+        }
       },
     });
 
     return result.toTextStreamResponse();
   } catch (error: any) {
     console.error('Chat API Error:', error);
-    // Return detailed error for debugging (remove in production later)
     return new Response(
-      JSON.stringify({
-        error: 'Internal Server Error',
-        details: error.message,
-        stack: error.stack,
-      }),
-      { status: 500 }
+      JSON.stringify({ error: 'Internal Server Error', details: error.message, stack: error.stack }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }
-
-
-
