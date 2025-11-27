@@ -38,24 +38,21 @@ export async function POST(req: Request) {
 
     // 1. Retrieve Context (RAG)
     const context = await getContext(query);
+        // 2. Generate Response with Streaming
+        const systemPrompt = `
+지식산업센터 AI 컨설턴트입니다. 아래 지식베이스를 참고하여 사용자의 질문을 정확하고 친절하게 답변하세요.
 
-    // 2. Generate Response with Streaming
-    const systemPrompt = [
-      'You are an AI consultant specialized in Korean knowledge-industry centers (JISAN).',
-      'Use the knowledge base below to understand the user question and answer clearly and professionally.',
-      '',
-      '[Knowledge Base]',
-      context,
-      '',
-      'Rules:',
-      '1) Base your statements only on the knowledge base content.',
-      "2) For legal/tax topics, note: 'as of 2025'.",
-      "3) If not in the knowledge base, respond: 'Sorry, that information is not in the current documents.'",
-      "4) Keep a polite, professional tone; add a short 'Summary' when helpful.",
-      '5) When possible, format neatly in Markdown.',
-    ].join('\n');
+[지식베이스]
+${context}
 
-    // Capture request details for logging
+규칙:
+1) 반드시 지식베이스의 내용에 근거해 설명하세요. 추측은 피하고 사실을 명확히 밝힙니다.
+2) 법률/세무 관련 내용은 "2025년 기준"임을 분명히 표기합니다.
+3) 지식베이스에 없는 내용이면 "죄송합니다. 현재 문서에는 해당 정보가 없습니다."라고 안내합니다.
+4) 말투는 정중하고 간결하게, 필요 시 마지막에 한 문장 요약을 덧붙입니다.
+5) 가능한 경우 마크다운 형식으로 보기 좋게 정리합니다.
+`;
+        // Capture request details for logging
     const headersList = await headers();
     const ip = headersList.get('x-forwarded-for') || 'unknown';
     const referer = headersList.get('referer') || 'unknown';
@@ -101,5 +98,6 @@ export async function POST(req: Request) {
     );
   }
 }
+
 
 
