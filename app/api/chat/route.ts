@@ -5,15 +5,8 @@ import { logChat } from '@/lib/db';
 import { appendLogToSheet } from '@/lib/google-sheets';
 import { headers } from 'next/headers';
 
-const apiKey = process.env.GOOGLE_API_KEY;
-
-if (!apiKey) {
-    console.error("GOOGLE_API_KEY is missing!");
-    throw new Error("GOOGLE_API_KEY is not set in environment variables");
-}
-
 const google = createGoogleGenerativeAI({
-    apiKey: apiKey || "",
+    apiKey: process.env.GOOGLE_API_KEY || "",
 });
 
 // Allow streaming responses up to 30 seconds
@@ -21,6 +14,10 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
     try {
+        if (!process.env.GOOGLE_API_KEY) {
+            console.error("GOOGLE_API_KEY is missing!");
+            throw new Error("GOOGLE_API_KEY is not set in environment variables");
+        }
         const { messages, sourceId = 'default' } = await req.json();
         const lastMessage = messages[messages.length - 1];
         const query = lastMessage.content;
