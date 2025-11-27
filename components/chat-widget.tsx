@@ -114,7 +114,7 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
             setMessages(prev => [...prev, {
                 id: Date.now().toString(),
                 role: 'assistant',
-                content: `二꾩넚?⑸땲?? ?ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.\n${error instanceof Error ? error.message : '?????녿뒗 ?ㅻ쪟'}`
+                content: `죄송합니다. 오류가 발생했습니다.\n${error instanceof Error ? error.message : "알 수 없는 오류"}`
             }]);
         } finally {
             setIsLoading(false);
@@ -156,7 +156,7 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
                 <div className="bg-slate-900 text-white p-4 flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                        <h3 className="font-semibold">吏?앹궛?낆꽱??AI 而⑥꽕?댄듃</h3>
+                        <h3 className="font-semibold">지식산업센터 AI 컨설턴트</h3>
                     </div>
                     <button onClick={() => setIsOpen(false)} className="hover:bg-slate-700 p-1 rounded">
                         <Minimize2 size={18} />
@@ -166,11 +166,7 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
                 {/* Messages Area */}
                 <div className="flex-1 overflow-y-auto p-4 bg-slate-50 space-y-4">
                     {messages.length === 0 && (
-                        <div className="text-center text-gray-500 mt-10 text-sm">
-                            <p>?덈뀞?섏꽭?? ?몝</p>
-                            <p>吏?앹궛?낆꽱???낆＜, ?멸툑, 踰뺣쪧 ??/p>
-                            <p>沅곴툑???먯쓣 臾쇱뼱蹂댁꽭??</p>
-                        </div>
+                        <div className="text-center text-gray-500 mt-10 text-sm">`n                            <p>안녕하세요!</p>`n                            <p>지식산업센터 분양/임대, 금융, 법률 등</p>`n                            <p>궁금한 내용을 물어보세요.</p>`n                        </div>
                     )}
 
                     {messages.map((m) => (
@@ -207,7 +203,7 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
                             className="flex-1 bg-gray-100 text-gray-900 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
-                            placeholder="吏덈Ц???낅젰?섏꽭??.."
+                            placeholder="질문을 입력하세요..."
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault();
@@ -242,4 +238,5 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
         </div>
     );
 }
+
 
