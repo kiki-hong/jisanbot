@@ -9,6 +9,7 @@ const apiKey = process.env.GOOGLE_API_KEY;
 
 if (!apiKey) {
     console.error("GOOGLE_API_KEY is missing!");
+    throw new Error("GOOGLE_API_KEY is not set in environment variables");
 }
 
 const google = createGoogleGenerativeAI({
@@ -77,7 +78,7 @@ export async function POST(req: Request) {
             },
         });
 
-        return result.toTextStreamResponse();
+
         return result.toTextStreamResponse();
     } catch (error: any) {
         console.error("Chat API Error:", error);
