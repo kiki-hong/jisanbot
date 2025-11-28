@@ -8,8 +8,8 @@ export default function EmbedPage({
     const sourceId = typeof searchParams.source === 'string' ? searchParams.source : 'embed';
 
     return (
-        <div className="bg-transparent min-h-screen">
-            <ChatWidget sourceId={sourceId} />
+        <div className="w-full h-screen bg-transparent">
+            <ChatWidget mode="embed" sourceId={sourceId} />
         </div>
     );
 }

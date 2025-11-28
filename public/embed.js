@@ -1,31 +1,60 @@
 (function () {
-    const script = document.currentScript;
-    const sourceId = script.getAttribute('data-source-id') || 'external';
-    const domain = script.getAttribute('data-domain') || 'http://localhost:3000'; // Replace with actual domain in production
+    // Capture the script element immediately while it's executing
+    const script = document.currentScript || document.querySelector('script[src*="embed.js"]');
 
-    // Create Iframe Container
-    const container = document.createElement('div');
-    container.style.position = 'fixed';
-    container.style.bottom = '20px';
-    container.style.right = '20px';
-    container.style.zIndex = '9999';
-    container.style.width = '400px'; // Initial width
-    container.style.height = '600px'; // Initial height
-    container.style.pointerEvents = 'none'; // Let clicks pass through when closed
+    function init() {
+        if (!script) return;
 
-    // Create Iframe
-    const iframe = document.createElement('iframe');
-    iframe.src = `${domain}/embed?source=${sourceId}`;
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
-    iframe.style.border = 'none';
-    iframe.style.backgroundColor = 'transparent';
-    iframe.allow = 'clipboard-write'; // Allow copying text
+        const sourceId = script.getAttribute('data-source-id') || 'external';
+        const domain = script.getAttribute('data-domain') || 'https://jisanbot.vercel.app';
 
-    container.appendChild(iframe);
-    document.body.appendChild(container);
+        // Create Iframe Container
+        const container = document.createElement('div');
+        container.id = 'jisan-chat-container';
+        container.style.position = 'fixed';
+        container.style.bottom = '20px';
+        container.style.right = '20px';
+        container.style.zIndex = '9999';
+        container.style.transition = 'all 0.3s ease';
+        // Initial size for the toggle button
+        container.style.width = '60px';
+        container.style.height = '60px';
+        container.style.boxShadow = 'none'; // Shadow is inside the iframe
 
-    // Handle messages from iframe (e.g., resize)
-    // In a real implementation, we would listen for 'open'/'close' events 
-    // to adjust the container size/pointer-events so it doesn't block the page.
+        // Create Iframe
+        const iframe = document.createElement('iframe');
+        // Point to the dedicated widget page
+        iframe.src = `${domain}/widget?source=${sourceId}`;
+        iframe.style.width = '100%';
+        iframe.style.height = '100%';
+        iframe.style.border = 'none';
+        iframe.style.backgroundColor = 'transparent';
+        iframe.allow = 'clipboard-write';
+
+        container.appendChild(iframe);
+        document.body.appendChild(container);
+
+        // Handle messages from iframe
+        window.addEventListener('message', function (event) {
+            if (event.data && event.data.type === 'CHAT_OPEN_CHANGED') {
+                if (event.data.isOpen) {
+                    // Expand to chat window size
+                    container.style.width = '400px';
+                    container.style.height = '650px';
+                    container.style.bottom = '20px';
+                    container.style.right = '20px';
+                } else {
+                    // Shrink to icon size
+                    container.style.width = '60px';
+                    container.style.height = '60px';
+                }
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 })();

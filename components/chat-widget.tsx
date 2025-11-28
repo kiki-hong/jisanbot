@@ -11,8 +11,14 @@ interface Message {
   content: string;
 }
 
-export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string }) {
-  const [isOpen, setIsOpen] = useState(false);
+interface ChatWidgetProps {
+  sourceId?: string;
+  mode?: 'widget' | 'embed';
+}
+
+// Main ChatWidget component
+export default function ChatWidget({ sourceId = 'default', mode = 'widget' }: ChatWidgetProps) {
+  const [isOpen, setIsOpen] = useState(mode === 'embed');
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,6 +32,21 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
   useEffect(() => { scrollToBottom(); }, [messages]);
 
   useEffect(() => {
+    if (mode === 'embed') {
+      setIsOpen(true);
+    }
+  }, [mode]);
+
+  // Notify parent window about open state changes (for iframe resizing)
+  useEffect(() => {
+    if (mode === 'widget' && window.parent !== window) {
+      window.parent.postMessage({ type: 'CHAT_OPEN_CHANGED', isOpen }, '*');
+    }
+  }, [isOpen, mode]);
+
+  useEffect(() => {
+    if (mode === 'embed') return;
+
     const handleMouseMove = (e: MouseEvent) => {
       if (!resizing) return;
       if (resizing === 'width') {
@@ -49,7 +70,7 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
       window.removeEventListener('mouseup', handleMouseUp);
       document.body.style.userSelect = '';
     };
-  }, [resizing]);
+  }, [resizing, mode]);
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -104,38 +125,46 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
     }
   };
 
+  const isWidget = mode === 'widget';
+
   return (
-    <div className="fixed bottom-4 right-4 z-50 font-sans">
+    <div className={clsx("font-sans", isWidget ? "fixed bottom-4 right-4 z-50" : "w-full h-full")}>
       {/* Chat Window */}
       <div
         ref={sidebarRef}
-        style={{ width, height }}
+        style={isWidget ? { width, height } : { width: '100%', height: '100%' }}
         className={twMerge(
-          'relative bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col',
-          'transition-all duration-300',
-          isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
+          'relative bg-white flex flex-col overflow-hidden',
+          isWidget && 'rounded-2xl shadow-xl border border-slate-200 transition-all duration-300',
+          isWidget && (isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'),
+          !isWidget && 'h-full w-full'
         )}
       >
-        {/* Width Resize Handle (Left) */}
-        <div
-          className="absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize hover:bg-blue-400/50 z-50 transition-colors"
-          onMouseDown={(e) => { e.preventDefault(); setResizing('width'); }}
-        />
-        {/* Height Resize Handle (Top) */}
-        <div
-          className="absolute left-0 top-0 right-0 h-1.5 cursor-ns-resize hover:bg-blue-400/50 z-50 transition-colors"
-          onMouseDown={(e) => { e.preventDefault(); setResizing('height'); }}
-        />
+        {/* Resize Handles (Widget Mode Only) */}
+        {isWidget && (
+          <>
+            <div
+              className="absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize hover:bg-blue-400/50 z-50 transition-colors"
+              onMouseDown={(e) => { e.preventDefault(); setResizing('width'); }}
+            />
+            <div
+              className="absolute left-0 top-0 right-0 h-1.5 cursor-ns-resize hover:bg-blue-400/50 z-50 transition-colors"
+              onMouseDown={(e) => { e.preventDefault(); setResizing('height'); }}
+            />
+          </>
+        )}
 
         {/* Header */}
-        <div className="bg-slate-900 text-white p-4 flex justify-between items-center">
+        <div className="bg-slate-900 text-white p-4 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
             <h3 className="font-semibold">지식산업센터 AI 컨설턴트</h3>
           </div>
-          <button onClick={() => setIsOpen(false)} className="hover:bg-slate-700 p-1 rounded">
-            <Minimize2 size={18} />
-          </button>
+          {isWidget && (
+            <button onClick={() => setIsOpen(false)} className="hover:bg-slate-700 p-1 rounded">
+              <Minimize2 size={18} />
+            </button>
+          )}
         </div>
 
         {/* Messages Area */}
@@ -175,7 +204,7 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
         </div>
 
         {/* Input Area */}
-        <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-gray-100">
+        <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-gray-100 shrink-0">
           <div className="flex gap-2">
             <input
               className="flex-1 bg-gray-100 text-gray-900 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
@@ -203,16 +232,18 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
         </form>
       </div>
 
-      {/* Toggle Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={twMerge(
-          'absolute bottom-0 right-0 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-all duration-300 hover:scale-110',
-          isOpen ? 'opacity-0 scale-0 pointer-events-none' : 'opacity-100 scale-100'
-        )}
-      >
-        <MessageCircle size={28} />
-      </button>
+      {/* Toggle Button (Widget Mode Only) */}
+      {isWidget && (
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className={twMerge(
+            'absolute bottom-0 right-0 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-all duration-300 hover:scale-110',
+            isOpen ? 'opacity-0 scale-0 pointer-events-none' : 'opacity-100 scale-100'
+          )}
+        >
+          <MessageCircle size={28} />
+        </button>
+      )}
     </div>
   );
 }

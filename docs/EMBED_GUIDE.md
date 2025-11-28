@@ -1,46 +1,45 @@
-# 챗봇 연동 가이드 (Embed Guide)
+# 챗봇 연동 가이드
 
-웹사이트에 지식산업센터 AI 챗봇을 추가하는 방법입니다. 아래 두 가지 방법 중 하나를 선택하여 사용하세요.
+지식산업센터 챗봇을 귀하의 웹사이트에 연동하는 3가지 방법입니다.
 
-## 방법 1: Iframe 사용 (가장 간단함)
+## 1. 위젯 스크립트 (추천)
+웹사이트 우측 하단에 챗봇 아이콘을 띄우는 방식입니다. 아이콘을 클릭하면 채팅창이 열립니다.
 
-원하는 위치(보통 `<body>` 태그의 끝 부분)에 아래 코드를 붙여넣으세요.
+HTML 파일의 `<head>` 태그 안쪽이나 `</body>` 태그 바로 앞에 아래 스크립트를 추가하세요.
+(페이지가 많은 사이트의 경우 공통 헤더나 `<head>`에 넣으면 모든 페이지에 적용되어 편리합니다.)
 
 ```html
-<iframe
-  src="https://jisanbot.vercel.app/embed?source=YOUR_WEBSITE_NAME"
+<script 
+  src="https://jisanbot.vercel.app/embed.js" 
+  data-source-id="your-website-id"
+  data-domain="https://jisanbot.vercel.app"
+  async
+></script>
+```
+
+- `data-source-id`: 웹사이트 식별자 (선택 사항, 통계용).
+- `data-domain`: 챗봇이 호스팅된 도메인 주소.
+
+## 2. Iframe 임베드 (삽입)
+페이지의 특정 영역(예: 사이드바, 문의 섹션)에 채팅창을 직접 삽입하는 방식입니다.
+
+```html
+<iframe 
+  src="https://jisanbot.vercel.app/embed?source=your-website-id"
   width="100%"
-  height="600"
-  style="position: fixed; bottom: 20px; right: 20px; border: none; z-index: 9999; max-width: 400px; max-height: 80vh; background: transparent;"
-  title="JisanBot"
+  height="600px"
+  frameborder="0"
+  style="border: 1px solid #e2e8f0; border-radius: 12px;"
 ></iframe>
 ```
 
-* `YOUR_WEBSITE_NAME` 부분을 실제 웹사이트 이름으로 변경하면, 로그에서 유입 경로를 확인할 수 있습니다.
-* `style` 속성을 수정하여 위치나 크기를 조절할 수 있습니다.
-
-## 방법 2: 스크립트 태그 (고급)
-
-더 유연한 제어를 위해 자바스크립트를 사용할 수 있습니다.
+## 3. 직접 링크 / 새 창 열기
+챗봇 페이지로 바로 이동하는 링크를 제공하는 방식입니다.
+`/widget` 주소를 사용하면 **우측 하단에 아이콘이 먼저 뜨고**, 클릭하면 채팅창이 열립니다.
+`?source=...` 파라미터를 붙이면 어떤 사이트에서 접속했는지 로그를 남길 수 있습니다.
 
 ```html
-<script>
-  (function() {
-    var iframe = document.createElement('iframe');
-    iframe.src = "https://jisanbot.vercel.app/embed?source=" + encodeURIComponent(window.location.hostname);
-    iframe.style.position = "fixed";
-    iframe.style.bottom = "20px";
-    iframe.style.right = "20px";
-    iframe.style.width = "400px";
-    iframe.style.height = "600px";
-    iframe.style.border = "none";
-    iframe.style.zIndex = "9999";
-    iframe.style.maxWidth = "100%";
-    iframe.style.maxHeight = "80vh";
-    iframe.style.background = "transparent";
-    document.body.appendChild(iframe);
-  })();
-</script>
+<a href="https://jisanbot.vercel.app/widget?source=your-website-id" target="_blank">
+  챗봇 상담하기
+</a>
 ```
-
-이 코드는 자동으로 현재 호스트네임을 `source` 파라미터로 전달합니다.
