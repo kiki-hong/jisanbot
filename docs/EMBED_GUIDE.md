@@ -29,12 +29,13 @@ HTML 파일의 `<head>` 태그 안쪽이나 `</body>` 태그 바로 앞에 아�
 ```html
 <iframe 
   src="https://jisanbot.vercel.app/embed?source=your-website-id"
-  width="100%"
+  width="80%"
   height="600px"
   frameborder="0"
-  style="border: 1px solid #e2e8f0; border-radius: 12px;"
+  style="border: 1px solid #e2e8f0; border-radius: 12px; display: block; margin: 0 auto;"
 ></iframe>
 ```
+*(참고: `width`를 `80%`로 설정하고 `margin: 0 auto`를 추가하면 화면 가운데에 정렬됩니다.)*
 
 ## 3. 직접 링크 / 새 창 열기
 챗봇 페이지로 바로 이동하는 링크를 제공하는 방식입니다.
