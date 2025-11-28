@@ -61,7 +61,7 @@ export default function ChatWidget({ sourceId = 'default' }: { sourceId?: string
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/chat?stream=1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: [...messages, userMessage], sourceId }),
