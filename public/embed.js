@@ -16,10 +16,12 @@
         container.style.right = '20px';
         container.style.zIndex = '9999';
         container.style.transition = 'all 0.3s ease';
-        // Initial size for the toggle button
-        container.style.width = '60px';
-        container.style.height = '60px';
-        container.style.boxShadow = 'none'; // Shadow is inside the iframe
+        // Initial size for the toggle button (increased to prevent clipping on hover)
+        container.style.width = '90px';
+        container.style.height = '90px';
+        container.style.boxShadow = 'none';
+        container.style.border = 'none';
+        container.style.background = 'transparent';
 
         // Create Iframe
         const iframe = document.createElement('iframe');
@@ -29,6 +31,7 @@
         iframe.style.height = '100%';
         iframe.style.border = 'none';
         iframe.style.backgroundColor = 'transparent';
+        iframe.setAttribute('allowTransparency', 'true');
         iframe.allow = 'clipboard-write';
 
         container.appendChild(iframe);
@@ -44,9 +47,9 @@
                     container.style.bottom = '20px';
                     container.style.right = '20px';
                 } else {
-                    // Shrink to icon size
-                    container.style.width = '60px';
-                    container.style.height = '60px';
+                    // Shrink to icon size (match initial size)
+                    container.style.width = '90px';
+                    container.style.height = '90px';
                 }
             }
         });
