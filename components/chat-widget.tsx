@@ -172,7 +172,7 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget' }: Ch
           {messages.length === 0 && (
             <div className="text-center text-gray-500 mt-10 text-sm">
               <p>안녕하세요!</p>
-              <p>지식산업센터 분양/임대, 금융, 법률 등</p>
+              <p>지식산업센터 입주, 분양/임대, 금융, 법률 등</p>
               <p>궁금한 내용을 물어보세요.</p>
             </div>
           )}
