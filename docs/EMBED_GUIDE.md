@@ -13,12 +13,15 @@ HTML 파일의 `<head>` 태그 안쪽이나 `</body>` 태그 바로 앞에 아�
   src="https://jisanbot.vercel.app/embed.js" 
   data-source-id="your-website-id"
   data-domain="https://jisanbot.vercel.app"
+  data-bottom="80px"  <!-- 아이콘의 바닥 여백 (기본값: 80px) -->
+  data-right="20px"   <!-- 아이콘의 우측 여백 (기본값: 20px) -->
   async
 ></script>
 ```
 
 - `data-source-id`: 웹사이트 식별자 (선택 사항, 통계용).
-- `data-domain`: 챗봇이 호스팅된 도메인 주소.
+- `data-bottom`: 화면 바닥에서 얼마나 띄울지 설정합니다. (예: `100px`, `10%`)
+- `data-right`: 화면 우측에서 얼마나 띄울지 설정합니다. (예: `50px`)
 
 ## 2. Iframe 임베드 (삽입)
 페이지의 특정 영역(예: 사이드바, 문의 섹션)에 채팅창을 직접 삽입하는 방식입니다.
