@@ -1,6 +1,5 @@
 ﻿import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import fs from 'fs';
-import path from 'path';
+
 import { streamText, generateText } from 'ai';
 import { getContext } from '@/lib/rag';
 import { logChat } from '@/lib/db';
@@ -33,7 +32,7 @@ export async function POST(req: Request) {
 
         const startContext = Date.now();
         const context = await getContext(query);
-        fs.appendFileSync(path.join(process.cwd(), 'debug_log.txt'), `getContext: ${Date.now() - startContext}ms\n`);
+        console.log(`getContext: ${Date.now() - startContext}ms`);
 
         const systemPrompt = [
             '지식산업센터 AI 컨설턴트입니다. 아래 지식베이스를 참고하여 사용자의 질문을 정확하고 친절하게 답변하세요.',
@@ -64,7 +63,7 @@ export async function POST(req: Request) {
                 system: systemPrompt,
                 messages,
             });
-            fs.appendFileSync(path.join(process.cwd(), 'debug_log.txt'), `generateText: ${Date.now() - startGen}ms\n`);
+            console.log(`generateText: ${Date.now() - startGen}ms`);
 
             await logChat(sourceId, query, text);
             await appendLogToSheet({
@@ -82,7 +81,7 @@ export async function POST(req: Request) {
             });
         }
 
-        fs.appendFileSync(path.join(process.cwd(), 'debug_log.txt'), `streamText start: ${Date.now()}\n`);
+        console.log(`streamText start: ${Date.now()}`);
         const result = await streamText({
             model: google('gemini-2.0-flash-001'),
             system: systemPrompt,
