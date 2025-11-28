@@ -20,13 +20,20 @@ export default function WidgetPage({
     }, []);
 
     return (
-        <div className="bg-transparent w-full h-full">
-            {/* 
-              We use mode="widget" here. 
-              The ChatWidget will handle the toggle button and the chat window.
-              It will also send postMessages to the parent to resize the iframe.
-            */}
-            <ChatWidget mode="widget" sourceId={sourceId} />
-        </div>
+        <>
+            <style jsx global>{`
+                body, html {
+                    background: transparent !important;
+                }
+            `}</style>
+            <div className="bg-transparent w-full h-full">
+                {/* 
+                  We use mode="widget" here. 
+                  The ChatWidget will handle the toggle button and the chat window.
+                  It will also send postMessages to the parent to resize the iframe.
+                */}
+                <ChatWidget mode="widget" sourceId={sourceId} />
+            </div>
+        </>
     );
 }
