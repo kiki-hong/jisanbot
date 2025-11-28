@@ -137,7 +137,7 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget' }: Ch
       {/* Chat Window */}
       <div
         ref={sidebarRef}
-        style={isWidget ? { width, height } : { width: '100%', height: '100%' }}
+        style={{ width: '100%', height: '100%' }}
         className={twMerge(
           'relative bg-white flex flex-col overflow-hidden',
           isWidget && 'rounded-2xl shadow-xl border border-slate-200 transition-all duration-300',
@@ -145,19 +145,7 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget' }: Ch
           !isWidget && 'h-full w-full'
         )}
       >
-        {/* Resize Handles (Widget Mode Only) */}
-        {isWidget && (
-          <>
-            <div
-              className="absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize hover:bg-blue-400/50 z-50 transition-colors"
-              onMouseDown={(e) => { e.preventDefault(); setResizing('width'); }}
-            />
-            <div
-              className="absolute left-0 top-0 right-0 h-1.5 cursor-ns-resize hover:bg-blue-400/50 z-50 transition-colors"
-              onMouseDown={(e) => { e.preventDefault(); setResizing('height'); }}
-            />
-          </>
-        )}
+
 
         {/* [중요] 헤더 영역: 챗봇의 제목과 닫기 버튼이 있습니다. */}
         <div className="bg-slate-900 text-white p-4 flex justify-between items-center shrink-0">
