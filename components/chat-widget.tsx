@@ -35,6 +35,10 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget' }: Ch
   useEffect(() => {
     if (mode === 'embed') {
       setIsOpen(true);
+    } else if (mode === 'widget') {
+      // [수정] 위젯 모드일 때 초기 높이를 화면의 80%로 설정 (최대 800px)
+      const initHeight = Math.min(window.innerHeight * 0.8, 800);
+      setHeight(Math.max(initHeight, 500)); // 최소 500px 보장
     }
   }, [mode]);
 
