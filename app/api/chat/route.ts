@@ -1,7 +1,7 @@
 ﻿import { createGoogleGenerativeAI } from '@ai-sdk/google';
 
 import { streamText, generateText } from 'ai';
-import { getContext } from '@/lib/rag';
+import { getContext, getKnowledgeScope } from '@/lib/rag';
 import { logChat } from '@/lib/db';
 import { appendLogToSheet } from '@/lib/google-sheets';
 import { headers } from 'next/headers';
@@ -32,10 +32,14 @@ export async function POST(req: Request) {
 
         const startContext = Date.now();
         const context = await getContext(query);
+        const knowledgeScope = await getKnowledgeScope();
         console.log(`getContext: ${Date.now() - startContext}ms`);
 
         const systemPrompt = [
             '지식산업센터 AI 컨설턴트입니다. 아래 지식베이스를 참고하여 사용자의 질문을 정확하고 친절하게 답변하세요.',
+            '',
+            '[답변 가능한 범위]',
+            knowledgeScope,
             '',
             '[지식베이스]',
             context,

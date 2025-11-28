@@ -100,3 +100,38 @@ export async function getContext(query: string): Promise<string> {
   }
 }
 
+export async function getKnowledgeScope(): Promise<string> {
+  try {
+    const possiblePaths = [
+      path.join(process.cwd(), 'data', 'knowledge_index.json'),
+      path.join(process.cwd(), 'public', 'data', 'knowledge_index.json'),
+      path.join(__dirname, 'data', 'knowledge_index.json'),
+    ];
+
+    let indexPath = '';
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        indexPath = p;
+        break;
+      }
+    }
+
+    if (!indexPath) {
+      return "지식베이스 인덱스를 찾을 수 없습니다.";
+    }
+
+    const indexContent = fs.readFileSync(indexPath, 'utf-8');
+    const index = JSON.parse(indexContent);
+
+    let scope = "현재 챗봇이 답변 가능한 지식 범위(문서 목록)입니다:\n";
+    index.forEach((item: any) => {
+      scope += `- ${item.title}: ${item.summary}\n`;
+    });
+
+    return scope;
+  } catch (error) {
+    console.error("Error reading knowledge scope:", error);
+    return "지식 범위를 불러오는 중 오류가 발생했습니다.";
+  }
+}
+
