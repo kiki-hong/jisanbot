@@ -36,29 +36,15 @@
         container.appendChild(iframe);
         document.body.appendChild(container);
 
-        // Handle messages from iframe
-        window.addEventListener('message', function (event) {
-            if (event.data && event.data.type === 'CHAT_OPEN_CHANGED') {
-                if (event.data.isOpen) {
-                    // Expand to chat window size
-                    container.style.width = '400px';
-                    container.style.height = '650px';
-                    container.style.bottom = '20px';
-                    container.style.right = '20px';
-                } else {
-                    // Shrink to icon size (match initial size)
-                    container.style.width = '90px';
-                    container.style.height = '90px';
-                    container.style.bottom = '80px';
-                    container.style.right = '20px';
-                }
-            }
+        container.style.right = '20px';
+    }
+}
         });
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-})();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
+}) ();

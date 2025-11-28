@@ -38,8 +38,38 @@ HTML 파일의 `<head>` 태그 안쪽이나 `</body>` 태그 바로 앞에 아�
 `/widget` 주소를 사용하면 **우측 하단에 아이콘이 먼저 뜨고**, 클릭하면 채팅창이 열립니다.
 `?source=...` 파라미터를 붙이면 어떤 사이트에서 접속했는지 로그를 남길 수 있습니다.
 
-```html
-<a href="https://jisanbot.vercel.app/widget?source=your-website-id" target="_blank">
-  챗봇 상담하기
-</a>
-```
+<div style="text-align: center; margin: 20px 0;">
+  <button 
+    onclick="openChatPopup()"
+    style="
+      background-color: #2563eb; 
+      color: white; 
+      padding: 12px 24px; 
+      border: none; 
+      border-radius: 25px; 
+      font-size: 16px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+      transition: background-color 0.2s;
+    "
+    onmouseover="this.style.backgroundColor='#1d4ed8'"
+    onmouseout="this.style.backgroundColor='#2563eb'"
+  >
+    챗봇 상담하기
+  </button>
+</div>
+
+<script>
+function openChatPopup() {
+  const width = 400;
+  const height = 600;
+  const left = (window.screen.width - width) / 2;
+  const top = (window.screen.height - height) / 2;
+  window.open(
+    'https://jisanbot.vercel.app/embed?source=popup', 
+    'JisanBot', 
+    `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
+  );
+}
+</script>
