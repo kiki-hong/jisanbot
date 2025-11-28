@@ -181,7 +181,8 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget' }: Ch
             <div
               key={m.id}
               className={clsx(
-                'max-w-[85%] rounded-2xl p-3 text-sm shadow-sm',
+                'rounded-2xl p-3 text-sm shadow-sm',
+                isWidget ? 'max-w-[85%]' : 'max-w-[80%]',
                 m.role === 'user'
                   ? 'bg-blue-600 text-white self-end ml-auto rounded-br-none'
                   : 'bg-white text-gray-800 border border-gray-100 self-start rounded-bl-none'
