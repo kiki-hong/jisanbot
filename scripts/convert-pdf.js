@@ -1,68 +1,76 @@
+
 const fs = require('fs');
 const path = require('path');
-const pdf = require('pdf-extraction');
+const pdf = require('pdf-parse');
+console.log('pdf-parse export type:', typeof pdf);
+console.log('pdf-parse export:', pdf);
 
-const dataRoot = path.join(__dirname, '..', 'data');
+const rawDir = path.join(process.cwd(), 'data', 'raw');
+const dataDir = path.join(process.cwd(), 'data');
 
-async function convertPdfsForBot(botId) {
-    const botDir = path.join(dataRoot, botId);
-    const rawDir = path.join(botDir, 'raw');
-
-    if (!fs.existsSync(rawDir)) {
-        console.log(`[Info] No raw directory found for bot '${botId}' at ${rawDir}`);
-        return;
-    }
-
-    const files = fs.readdirSync(rawDir).filter(file => file.toLowerCase().endsWith('.pdf'));
-
-    if (files.length === 0) {
-        console.log(`[Info] No PDF files found for bot '${botId}'`);
-        return;
-    }
-
-    console.log(`[${botId}] Found ${files.length} PDF files.`);
-
-    for (const file of files) {
-        console.log(`[${botId}] Processing file: ${file}`);
-        const filePath = path.join(rawDir, file);
-
-        try {
-            const dataBuffer = fs.readFileSync(filePath);
-            const data = await pdf(dataBuffer);
-
-            const mdFileName = file.replace('.pdf', '.md');
-            const mdFilePath = path.join(botDir, mdFileName);
-
-            const mdContent = `---
-title: ${file}
-source: ${file}
----
-
-${data.text}
-`;
-
-            fs.writeFileSync(mdFilePath, mdContent);
-            console.log(`[${botId}] Success: Converted ${file} -> ${mdFileName}`);
-        } catch (error) {
-            console.error(`[${botId}] Error converting ${file}:`, error);
+async function convertPdfs() {
+    try {
+        if (!fs.existsSync(rawDir)) {
+            console.error('Raw directory not found:', rawDir);
+            return;
         }
-    }
-}
 
-async function main() {
-    const targetBotId = process.argv[2];
+        const files = fs.readdirSync(rawDir).filter(file => file.toLowerCase().endsWith('.pdf'));
+        console.log(`Found ${files.length} PDF files.`);
 
-    if (targetBotId) {
-        await convertPdfsForBot(targetBotId);
-    } else {
-        // Process all directories in data/
-        const items = fs.readdirSync(dataRoot, { withFileTypes: true });
-        for (const item of items) {
-            if (item.isDirectory()) {
-                await convertPdfsForBot(item.name);
+        let convertedCount = 0;
+        let skippedCount = 0;
+
+        for (const file of files) {
+            const filePath = path.join(rawDir, file);
+            const mdFileName = file.replace(/\.pdf$/i, '.md');
+            const mdFilePath = path.join(dataDir, mdFileName);
+
+            // Check if conversion is needed
+            if (fs.existsSync(mdFilePath)) {
+                const pdfStats = fs.statSync(filePath);
+                const mdStats = fs.statSync(mdFilePath);
+
+                if (pdfStats.mtime <= mdStats.mtime) {
+                    console.log(`Skipping: ${file} (already up to date)`);
+                    skippedCount++;
+                    continue;
+                }
+            }
+
+            const dataBuffer = fs.readFileSync(filePath);
+
+            console.log(`Converting: ${file}...`);
+
+            let parser;
+            try {
+                // Initialize parser with data buffer
+                parser = new pdf.PDFParse({ data: dataBuffer });
+
+                // Extract text
+                const data = await parser.getText();
+                const text = data.text;
+
+                // Simple cleanup: remove excessive newlines
+                const cleanText = text.replace(/\n\s*\n/g, '\n\n');
+
+                const mdContent = `# ${file}\n\n${cleanText}`;
+
+                fs.writeFileSync(mdFilePath, mdContent);
+                console.log(`Saved to: ${mdFileName}`);
+                convertedCount++;
+            } catch (err) {
+                console.error(`Failed to convert ${file}:`, err.message);
+            } finally {
+                if (parser) {
+                    await parser.destroy();
+                }
             }
         }
+        console.log(`Conversion complete. Converted: ${convertedCount}, Skipped: ${skippedCount}`);
+    } catch (error) {
+        console.error('Error during conversion:', error);
     }
 }
 
-main().catch(err => console.error("Fatal error:", err));
+convertPdfs();

@@ -2,23 +2,19 @@
 import path from 'path';
 
 
-import { bots, defaultBotId } from '@/lib/bots';
-
 // Simple in-memory RAG for prototype
 // In production, this would connect to Vertex AI Search or a Vector DB
 
-export async function getContext(botId: string, query: string): Promise<string> {
+export async function getContext(query: string): Promise<string> {
   try {
-    const botConfig = bots[botId] || bots[defaultBotId];
-
     // Try to find the data directory in multiple common locations
     // In Vercel, process.cwd() is usually the project root.
     const possiblePaths = [
-      path.join(process.cwd(), 'data', botId),
-      path.join(process.cwd(), 'public', 'data', botId),
-      path.join(__dirname, 'data', botId),
-      path.join(__dirname, '..', 'data', botId),
-      path.join(__dirname, '..', '..', 'data', botId),
+      path.join(process.cwd(), 'data'),
+      path.join(process.cwd(), 'public', 'data'), // Sometimes useful to put in public
+      path.join(__dirname, 'data'),
+      path.join(__dirname, '..', 'data'),
+      path.join(__dirname, '..', '..', 'data'),
     ];
 
     let dataDir = '';
@@ -30,7 +26,9 @@ export async function getContext(botId: string, query: string): Promise<string> 
     }
 
     if (!dataDir) {
-      console.error(`[RAG] Data directory not found for bot '${botId}' in:`, possiblePaths);
+      console.error("[RAG] Data directory not found in:", possiblePaths);
+      console.error("[RAG] Current working directory:", process.cwd());
+      console.error("[RAG] __dirname:", __dirname);
       return "지식베이스를 찾을 수 없습니다. (시스템 점검 중)";
     }
 
@@ -40,10 +38,26 @@ export async function getContext(botId: string, query: string): Promise<string> 
     let allContent = "";
 
     // Always include these core files if they exist
-    const coreFiles = botConfig.rag.coreFiles;
+    const coreFiles = ['knowledge_base.md', '지식산업센터입주가능업종.md', '분양자 준수사항.md'];
 
     // Keyword mapping for large legal documents
-    const keywordMap = botConfig.rag.keywordMap;
+    const keywordMap: { [key: string]: string[] } = {
+      '건축': ['건축법'],
+      '국토': ['국토의 계획'],
+      '용도': ['국토의 계획'],
+      '벤처': ['벤처기업'],
+      '산업단지': ['산업단지'],
+      '산업입지': ['산업입지'],
+      '산업집적': ['산업집적', '공장설립'],
+      '공장': ['산업집적', '공장설립'],
+      '수도권': ['수도권정비'],
+      '과밀': ['수도권정비'],
+      '세금': ['지방세'],
+      '취득세': ['지방세'],
+      '재산세': ['지방세'],
+      '감면': ['지방세'],
+      '지방세': ['지방세'],
+    };
 
     const relevantFiles = new Set<string>();
 
@@ -86,12 +100,12 @@ export async function getContext(botId: string, query: string): Promise<string> 
   }
 }
 
-export async function getKnowledgeScope(botId: string): Promise<string> {
+export async function getKnowledgeScope(): Promise<string> {
   try {
     const possiblePaths = [
-      path.join(process.cwd(), 'data', botId, 'knowledge_index.json'),
-      path.join(process.cwd(), 'public', 'data', botId, 'knowledge_index.json'),
-      path.join(__dirname, 'data', botId, 'knowledge_index.json'),
+      path.join(process.cwd(), 'data', 'knowledge_index.json'),
+      path.join(process.cwd(), 'public', 'data', 'knowledge_index.json'),
+      path.join(__dirname, 'data', 'knowledge_index.json'),
     ];
 
     let indexPath = '';
@@ -103,8 +117,7 @@ export async function getKnowledgeScope(botId: string): Promise<string> {
     }
 
     if (!indexPath) {
-      // If no index file, just list the files
-      return "지식베이스 인덱스 파일이 없습니다.";
+      return "지식베이스 인덱스를 찾을 수 없습니다.";
     }
 
     const indexContent = fs.readFileSync(indexPath, 'utf-8');

@@ -1,55 +1,79 @@
 # 챗봇 연동 가이드
 
-**한의학 AI 컨설턴트**를 귀하의 웹사이트(한의원 홈페이지, 건강 블로그 등)에 연동하는 방법입니다.
+지식산업센터 챗봇을 귀하의 웹사이트에 연동하는 3가지 방법입니다.
 
 ## 1. 위젯 스크립트 (추천)
-웹사이트 우측 하단에 챗봇 아이콘을 띄우는 방식입니다.
+웹사이트 우측 하단에 챗봇 아이콘을 띄우는 방식입니다. 아이콘을 클릭하면 채팅창이 열립니다.
 
 HTML 파일의 `<head>` 태그 안쪽이나 `</body>` 태그 바로 앞에 아래 스크립트를 추가하세요.
+(페이지가 많은 사이트의 경우 공통 헤더나 `<head>`에 넣으면 모든 페이지에 적용되어 편리합니다.)
 
 ```html
 <script 
-  src="https://your-chatbot-domain.com/embed.js" 
+  src="https://jisanbot.vercel.app/embed.js" 
   data-source-id="your-website-id"
-  data-domain="https://your-chatbot-domain.com"
-  data-bottom="80px"
-  data-right="20px"
+  data-domain="https://jisanbot.vercel.app"
+  data-bottom="80px"  <!-- 아이콘의 바닥 여백 (기본값: 80px) -->
+  data-right="20px"   <!-- 아이콘의 우측 여백 (기본값: 20px) -->
   async
 ></script>
 ```
 
-*(참고: 배포된 도메인 주소에 따라 `src`와 `data-domain`을 수정해야 합니다.)*
+- `data-source-id`: 웹사이트 식별자 (선택 사항, 통계용).
+- `data-bottom`: 화면 바닥에서 얼마나 띄울지 설정합니다. (예: `100px`, `10%`)
+- `data-right`: 화면 우측에서 얼마나 띄울지 설정합니다. (예: `50px`)
 
 ## 2. Iframe 임베드 (삽입)
-페이지의 특정 영역에 채팅창을 직접 삽입하는 방식입니다.
+페이지의 특정 영역(예: 사이드바, 문의 섹션)에 채팅창을 직접 삽입하는 방식입니다.
 
 ```html
 <iframe 
-  src="https://your-chatbot-domain.com/embed?source=your-website-id"
-  width="100%"
+  src="https://jisanbot.vercel.app/embed?source=your-website-id"
+  width="80%"
   height="600px"
   frameborder="0"
-  style="border: 1px solid #e2e8f0; border-radius: 12px;"
+  style="border: 1px solid #e2e8f0; border-radius: 12px; display: block; margin: 0 auto;"
 ></iframe>
 ```
+*(참고: `width`를 `80%`로 설정하고 `margin: 0 auto`를 추가하면 화면 가운데에 정렬됩니다.)*
 
-## 3. 직접 링크 / 팝업
-버튼을 클릭했을 때 새 창으로 챗봇을 띄우는 방식입니다.
+## 3. 직접 링크 / 새 창 열기
+챗봇 페이지로 바로 이동하는 링크를 제공하는 방식입니다.
+`/widget` 주소를 사용하면 **우측 하단에 아이콘이 먼저 뜨고**, 클릭하면 채팅창이 열립니다.
+`?source=...` 파라미터를 붙이면 어떤 사이트에서 접속했는지 로그를 남길 수 있습니다.
 
-```javascript
+<div style="text-align: center; margin: 20px 0;">
+  <button 
+    onclick="openChatPopup()"
+    style="
+      background-color: #2563eb; 
+      color: white; 
+      padding: 12px 24px; 
+      border: none; 
+      border-radius: 25px; 
+      font-size: 16px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+      transition: background-color 0.2s;
+    "
+    onmouseover="this.style.backgroundColor='#1d4ed8'"
+    onmouseout="this.style.backgroundColor='#2563eb'"
+  >
+    챗봇 상담하기
+  </button>
+</div>
+
+<script>
 function openChatPopup() {
+  const width = 400;
+  const height = 600;
+  const left = (window.screen.width - width) / 2;
+  const top = (window.screen.height - height) / 2;
   window.open(
-    'https://your-chatbot-domain.com/embed?source=popup', 
-    'NaturalMedBot', 
-    'width=400,height=600,resizable=yes,scrollbars=yes'
+    'https://jisanbot.vercel.app/embed?source=popup', 
+    'JisanBot', 
+    `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
   );
 }
-```
-
-## 4. 카카오톡 / SNS 공유 링크
-카카오톡, 문자, 블로그 등에 **챗봇으로 바로 연결되는 링크**를 공유하고 싶다면 아래 주소를 사용하세요.
-이 링크를 클릭하면 챗봇이 전체 화면으로 열립니다.
-
-- **기본 링크**: `https://your-chatbot-domain.com/embed`
-- **출처 추적용 링크** (예: 카카오톡에서 유입): `https://your-chatbot-domain.com/embed?source=kakao`
-
+</script>

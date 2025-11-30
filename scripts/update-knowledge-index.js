@@ -1,36 +1,24 @@
 const fs = require('fs');
 const path = require('path');
 
-const dataRoot = path.join(__dirname, '../data');
+const DATA_DIR = path.join(__dirname, '../data');
+const INDEX_FILE = path.join(DATA_DIR, 'knowledge_index.json');
 
-function updateKnowledgeIndexForBot(botId) {
-    const botDir = path.join(dataRoot, botId);
-    const indexFile = path.join(botDir, 'knowledge_index.json');
-
-    if (!fs.existsSync(botDir)) {
-        console.log(`[Info] Bot directory not found: ${botDir}`);
-        return;
-    }
-
-    console.log(`[${botId}] Scanning data directory...`);
+function updateKnowledgeIndex() {
+    console.log('Scanning data directory...');
 
     // Read existing index if it exists
     let existingIndex = [];
-    if (fs.existsSync(indexFile)) {
+    if (fs.existsSync(INDEX_FILE)) {
         try {
-            existingIndex = JSON.parse(fs.readFileSync(indexFile, 'utf8'));
+            existingIndex = JSON.parse(fs.readFileSync(INDEX_FILE, 'utf8'));
         } catch (e) {
-            console.error(`[${botId}] Error reading existing index:`, e);
+            console.error('Error reading existing index:', e);
         }
     }
 
     // Get list of MD files
-    const files = fs.readdirSync(botDir).filter(file => file.endsWith('.md'));
-
-    if (files.length === 0) {
-        console.log(`[${botId}] No Markdown files found.`);
-        return;
-    }
+    const files = fs.readdirSync(DATA_DIR).filter(file => file.endsWith('.md') && file !== 'knowledge_base.md'); // Exclude the main knowledge_base.md if it's a concatenation or special file, or keep it if it's a valid source. Based on previous context, knowledge_base.md might be the old single file. Let's include it for now but maybe user wants individual files. The user said "knowledge_base.md" exists. Let's include all .md files.
 
     const newIndex = [];
 
@@ -49,22 +37,13 @@ function updateKnowledgeIndexForBot(botId) {
                 summary: `Document about ${title}`, // Default summary
                 category: 'General' // Default category
             });
-            console.log(`[${botId}] Added new file: ${file}`);
+            console.log(`Added new file: ${file}`);
         }
     });
 
     // Write updated index
-    fs.writeFileSync(indexFile, JSON.stringify(newIndex, null, 2), 'utf8');
-    console.log(`[${botId}] Updated knowledge index with ${newIndex.length} files.`);
+    fs.writeFileSync(INDEX_FILE, JSON.stringify(newIndex, null, 2), 'utf8');
+    console.log(`Updated knowledge index with ${newIndex.length} files.`);
 }
 
-function main() {
-    const items = fs.readdirSync(dataRoot, { withFileTypes: true });
-    for (const item of items) {
-        if (item.isDirectory()) {
-            updateKnowledgeIndexForBot(item.name);
-        }
-    }
-}
-
-main();
+updateKnowledgeIndex();

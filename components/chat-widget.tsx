@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, Minimize2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { bots, defaultBotId } from '@/lib/bots';
 
 interface Message {
   id: string;
@@ -15,11 +14,10 @@ interface Message {
 interface ChatWidgetProps {
   sourceId?: string;
   mode?: 'widget' | 'embed';
-  botId?: string;
 }
 
 // Main ChatWidget component
-export default function ChatWidget({ sourceId = 'default', mode = 'widget', botId = defaultBotId }: ChatWidgetProps) {
+export default function ChatWidget({ sourceId = 'default', mode = 'widget' }: ChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(mode === 'embed');
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -30,18 +28,12 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget', botI
   const sidebarRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const botConfig = bots[botId] || bots[defaultBotId];
-
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   useEffect(() => { scrollToBottom(); }, [messages]);
 
   useEffect(() => {
     if (mode === 'embed') {
       setIsOpen(true);
-    } else if (mode === 'widget') {
-      // [수정] 위젯 모드일 때 초기 높이를 화면의 80%로 설정 (최대 800px)
-      const initHeight = Math.min(window.innerHeight * 0.8, 800);
-      setHeight(Math.max(initHeight, 500)); // 최소 500px 보장
     }
   }, [mode]);
 
@@ -90,13 +82,16 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget', botI
     setIsLoading(true);
 
     try {
+      console.log('[Debug] Sending message:', { messages: [...messages, userMessage], sourceId });
       const response = await fetch('/api/chat?stream=1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [...messages, userMessage], sourceId, botId }),
+        body: JSON.stringify({ messages: [...messages, userMessage], sourceId }),
       });
+      console.log('[Debug] Response status:', response.status);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('[Debug] Response error data:', errorData);
         throw new Error(errorData.details || errorData.error || 'Network response was not ok');
       }
 
@@ -120,6 +115,7 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget', botI
       }
     } catch (error) {
       console.error('Chat error:', error);
+      console.error('[Debug] Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
       setMessages(prev => [
         ...prev,
         {
@@ -140,7 +136,7 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget', botI
       {/* Chat Window */}
       <div
         ref={sidebarRef}
-        style={{ width: '100%', height: '100%' }}
+        style={isWidget ? { width, height } : { width: '100%', height: '100%' }}
         className={twMerge(
           'relative bg-white flex flex-col overflow-hidden',
           isWidget && 'rounded-2xl shadow-xl border border-slate-200 transition-all duration-300',
@@ -148,13 +144,25 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget', botI
           !isWidget && 'h-full w-full'
         )}
       >
+        {/* Resize Handles (Widget Mode Only) */}
+        {isWidget && (
+          <>
+            <div
+              className="absolute left-0 top-0 bottom-0 w-1.5 cursor-ew-resize hover:bg-blue-400/50 z-50 transition-colors"
+              onMouseDown={(e) => { e.preventDefault(); setResizing('width'); }}
+            />
+            <div
+              className="absolute left-0 top-0 right-0 h-1.5 cursor-ns-resize hover:bg-blue-400/50 z-50 transition-colors"
+              onMouseDown={(e) => { e.preventDefault(); setResizing('height'); }}
+            />
+          </>
+        )}
 
-
-        {/* [중요] 헤더 영역: 챗봇의 제목과 닫기 버튼이 있습니다. */}
+        {/* Header */}
         <div className="bg-slate-900 text-white p-4 flex justify-between items-center shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            <h3 className="font-semibold">{botConfig.chatbotName}</h3>
+            <h3 className="font-semibold">지식산업센터 AI 컨설턴트</h3>
           </div>
           {isWidget && (
             <button onClick={() => setIsOpen(false)} className="hover:bg-slate-700 p-1 rounded">
@@ -163,13 +171,13 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget', botI
           )}
         </div>
 
-        {/* [중요] 메시지 영역: 대화 내용이 표시되는 곳입니다. */}
+        {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-4 bg-slate-50 space-y-4">
           {messages.length === 0 && (
             <div className="text-center text-gray-500 mt-10 text-sm">
-              {botConfig.initialMessages.map((msg, idx) => (
-                <p key={idx}>{msg}</p>
-              ))}
+              <p>안녕하세요!</p>
+              <p>지식산업센터 입주, 분양/임대, 금융, 법률 등</p>
+              <p>궁금한 내용을 물어보세요.</p>
             </div>
           )}
 
@@ -200,15 +208,14 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget', botI
           <div ref={messagesEndRef} />
         </div>
 
-        {/* [중요] 입력 영역: 사용자가 질문을 입력하고 전송하는 곳입니다. */}
+        {/* Input Area */}
         <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-gray-100 shrink-0">
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <input
-              className="flex-1 min-w-0 bg-gray-100 text-gray-900 rounded-full px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              className="flex-1 min-w-0 bg-gray-100 text-gray-900 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder={botConfig.placeholderText}
-              enterKeyHint="send"
+              placeholder="질문을 입력하세요..."
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -219,7 +226,7 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget', botI
             <button
               type="submit"
               disabled={isLoading || !inputValue.trim()}
-              className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="shrink-0 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send size={18} />
             </button>
@@ -230,7 +237,7 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget', botI
         </form>
       </div>
 
-      {/* [중요] 토글 버튼 (위젯 모드 전용): 챗봇을 열고 닫는 둥근 버튼입니다. */}
+      {/* Toggle Button (Widget Mode Only) */}
       {isWidget && (
         <button
           onClick={() => setIsOpen(!isOpen)}

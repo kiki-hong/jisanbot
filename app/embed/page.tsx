@@ -1,14 +1,15 @@
 import ChatWidget from '@/components/chat-widget';
 
-export default function EmbedPage({
+export default async function EmbedPage({
     searchParams,
 }: {
-    searchParams: { [key: string]: string | string[] | undefined };
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-    const sourceId = typeof searchParams.source === 'string' ? searchParams.source : 'embed';
+    const params = await searchParams;
+    const sourceId = typeof params.source === 'string' ? params.source : 'embed';
 
     return (
-        <div className="w-full h-[100dvh] bg-transparent">
+        <div className="w-full h-screen bg-transparent">
             <ChatWidget mode="embed" sourceId={sourceId} />
         </div>
     );

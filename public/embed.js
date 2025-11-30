@@ -45,9 +45,9 @@
                 if (event.data.isOpen) {
                     // Expand to chat window size
                     container.style.width = '400px';
-                    container.style.maxWidth = '90%';
-                    container.style.height = '80vh';
-                    container.style.maxHeight = '80vh';
+                    container.style.maxWidth = '80%';
+                    container.style.height = '650px';
+                    container.style.maxHeight = '80%';
                     container.style.bottom = '20px'; // Always center/bottom when open? Or respect custom?
                     // Let's keep it simple: when open, it usually needs to be visible. 
                     // If custom bottom is very high, it might float weirdly.

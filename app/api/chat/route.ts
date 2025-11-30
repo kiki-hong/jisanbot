@@ -2,7 +2,6 @@
 
 import { streamText, generateText } from 'ai';
 import { getContext, getKnowledgeScope } from '@/lib/rag';
-import { bots, defaultBotId } from '@/lib/bots';
 import { logChat } from '@/lib/db';
 import { appendLogToSheet } from '@/lib/google-sheets';
 import { headers } from 'next/headers';
@@ -13,9 +12,9 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
     try {
+        console.log('[Debug API] POST request received');
         const apiKey = process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-        console.log('[DEBUG] API Key present:', !!apiKey);
-        console.log('[DEBUG] NODE_ENV:', process.env.NODE_ENV);
+        console.log('[Debug API] API Key present:', !!apiKey);
         if (!apiKey) {
             return new Response(
                 JSON.stringify({
@@ -29,25 +28,32 @@ export async function POST(req: Request) {
 
         const google = createGoogleGenerativeAI({ apiKey });
 
-        const { messages, sourceId = 'default', botId = defaultBotId } = await req.json();
+        const { messages, sourceId = 'default' } = await req.json();
+        console.log('[Debug API] Request body parsed. Messages count:', messages?.length, 'SourceId:', sourceId);
         const lastMessage = messages[messages.length - 1];
         const query = lastMessage?.content ?? '';
 
-        const botConfig = bots[botId] || bots[defaultBotId];
-
         const startContext = Date.now();
-        const context = await getContext(botId, query);
-        const knowledgeScope = await getKnowledgeScope(botId);
+        const context = await getContext(query);
+        const knowledgeScope = await getKnowledgeScope();
         console.log(`getContext: ${Date.now() - startContext}ms`);
 
         const systemPrompt = [
-            botConfig.systemPrompt,
+            '지식산업센터 AI 컨설턴트입니다. 아래 지식베이스를 참고하여 사용자의 질문을 정확하고 친절하게 답변하세요.',
             '',
             '[답변 가능한 범위]',
             knowledgeScope,
             '',
             '[지식베이스]',
             context,
+            '',
+            '규칙:',
+            '1) 반드시 [지식베이스] 및 [답변 가능한 범위]의 내용에 근거해 설명하세요. 추측은 피하고 사실을 명확히 밝힙니다.',
+            '2) 사용자가 챗봇의 기능이나 답변 가능한 범위를 물어보면, 구체적인 파일명을 나열하지 마세요. 대신 지식산업센터와 산업단지, 특히 산업집적법과 세법 관련 내용을 중심으로 전문가처럼 자연스럽게 답변하세요. 고정된 문구를 반복하지 말고 상황에 맞춰 설명하세요.',
+            '3) 법률/세무 관련 내용은 "2025년 기준"임을 분명히 표기합니다.',
+            '4) 지식베이스에 없는 내용이면 "죄송합니다. 현재 문서에는 해당 정보가 없습니다."라고 안내합니다.',
+            '5) 말투는 정중하고 신뢰감 있는 전문가(컨설턴트)의 톤을 유지하세요.',
+            '6) 가능한 경우 마크다운 형식으로 보기 좋게 정리합니다.',
         ].join('\n');
 
         const headersList = await headers();
@@ -74,10 +80,9 @@ export async function POST(req: Request) {
                 referer,
                 userAgent,
                 sourceId,
-                botId,
                 question: query,
                 answer: text,
-            }, botConfig.googleSheetId, botConfig.googleSheetName);
+            });
 
             return new Response(text || '응답이 비어 있습니다.', {
                 headers: { 'Content-Type': 'text/plain; charset=utf-8' },
@@ -98,10 +103,9 @@ export async function POST(req: Request) {
                         referer,
                         userAgent,
                         sourceId,
-                        botId,
                         question: query,
                         answer: completion.text,
-                    }, botConfig.googleSheetId, botConfig.googleSheetName);
+                    });
                 } catch (e) {
                     console.warn('[Log] Skipped logging error:', e);
                 }
@@ -111,6 +115,12 @@ export async function POST(req: Request) {
         return result.toTextStreamResponse();
     } catch (error: any) {
         console.error('Chat API Error:', error);
+        // Write error to file for debugging
+        const fs = require('fs');
+        const path = require('path');
+        const errorLogPath = path.join(process.cwd(), 'error.log');
+        fs.appendFileSync(errorLogPath, `${new Date().toISOString()} - ${error.message}\n${error.stack}\n\n`);
+
         return new Response(
             JSON.stringify({ error: 'Internal Server Error', details: error.message, stack: error.stack }),
             { status: 500, headers: { 'Content-Type': 'application/json' } }

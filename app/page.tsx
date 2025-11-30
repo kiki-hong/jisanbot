@@ -8,11 +8,8 @@ export default function WidgetPage({
 }: {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-    const resolvedParams = use(searchParams);
-    // [중요] 기본 모드를 'embed'(전체화면)로 설정합니다. 
-    // 위젯으로 쓰려면 URL 뒤에 ?mode=widget 을 붙여야 합니다.
-    const mode = resolvedParams.mode === 'widget' ? 'widget' : 'embed';
-    const sourceId = typeof resolvedParams.source === 'string' ? resolvedParams.source : 'default';
+    const params = use(searchParams);
+    const sourceId = typeof params.source === 'string' ? params.source : 'widget-embed';
 
     useEffect(() => {
         // Force transparent background for the widget iframe
@@ -30,7 +27,7 @@ export default function WidgetPage({
               The ChatWidget will handle the toggle button and the chat window.
               It will also send postMessages to the parent to resize the iframe.
             */}
-            <ChatWidget mode={mode} sourceId={sourceId} />
+            <ChatWidget mode="widget" sourceId={sourceId} />
         </div>
     );
 }
