@@ -82,13 +82,16 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget' }: Ch
     setIsLoading(true);
 
     try {
+      console.log('[Debug] Sending message:', { messages: [...messages, userMessage], sourceId });
       const response = await fetch('/api/chat?stream=1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: [...messages, userMessage], sourceId }),
       });
+      console.log('[Debug] Response status:', response.status);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('[Debug] Response error data:', errorData);
         throw new Error(errorData.details || errorData.error || 'Network response was not ok');
       }
 
@@ -112,6 +115,7 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget' }: Ch
       }
     } catch (error) {
       console.error('Chat error:', error);
+      console.error('[Debug] Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
       setMessages(prev => [
         ...prev,
         {
@@ -206,9 +210,9 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget' }: Ch
 
         {/* Input Area */}
         <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-gray-100 shrink-0">
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <input
-              className="flex-1 bg-gray-100 text-gray-900 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              className="flex-1 min-w-0 bg-gray-100 text-gray-900 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="질문을 입력하세요..."
@@ -222,13 +226,13 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget' }: Ch
             <button
               type="submit"
               disabled={isLoading || !inputValue.trim()}
-              className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="shrink-0 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Send size={18} />
             </button>
           </div>
           <div className="text-center mt-2">
-            <span className="text-[10px] text-gray-400">Powered by RAG System</span>
+            <span className="text-[10px] text-gray-400">Powered by JisanBot System</span>
           </div>
         </form>
       </div>
