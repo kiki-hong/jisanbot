@@ -212,10 +212,11 @@ export default function ChatWidget({ sourceId = 'default', mode = 'widget' }: Ch
         <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-gray-100 shrink-0">
           <div className="flex gap-2 items-center">
             <input
-              className="flex-1 min-w-0 bg-gray-100 text-gray-900 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              className="flex-1 min-w-0 bg-gray-100 text-gray-900 rounded-full px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="질문을 입력하세요..."
+              enterKeyHint="send"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
