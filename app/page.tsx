@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect } from 'react';
+import { use, useEffect } from 'react';
 import ChatWidget from '@/components/chat-widget';
 
 export default function WidgetPage({
     searchParams,
 }: {
-    searchParams: { [key: string]: string | string[] | undefined };
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-    const sourceId = typeof searchParams.source === 'string' ? searchParams.source : 'widget-embed';
+    const resolvedSearchParams = use(searchParams);
+    const sourceId = typeof resolvedSearchParams.source === 'string' ? resolvedSearchParams.source : 'widget-embed';
 
     useEffect(() => {
         // Force transparent background for the widget iframe
